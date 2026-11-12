@@ -30,9 +30,9 @@ ip a
 ss -tulnp
 ```
 
-![OS 버전과 네트워크 주소](<(1)ip-a.png>)
+![OS 버전과 네트워크 주소](<images/(1)ip-a.png>)
 
-![열린 포트 목록](<(2)ss -tulnp.png>)
+![열린 포트 목록](<images/(2)ss -tulnp.png>)
 
 ## 2. SSH 서버 설치와 접속
 
@@ -44,13 +44,13 @@ sudo apt install openssh-server -y
 sudo systemctl status ssh
 ```
 
-![SSH 서비스 설치와 실행 확인](<(3)ssh_설치.png>)
+![SSH 서비스 설치와 실행 확인](<images/(3)ssh_설치.png>)
 
 윈도우에서 처음 접속할 때는 서버의 지문(fingerprint)을 확인하라는 질문이 나옵니다. 이 서버가 맞는지 처음 한 번 확인하는 단계이고, 이후 지문이 바뀌면 경고가 뜹니다.
 
-![비밀번호로 SSH 접속](<(4)ssh-접속.png>)
+![비밀번호로 SSH 접속](<images/(4)ssh-접속.png>)
 
-![초기 설정](<(5)초기설정.png>)
+![초기 설정](<images/(5)초기설정.png>)
 
 ## 3. SSH 키 인증
 
@@ -61,7 +61,7 @@ ssh-keygen -t ed25519
 type $env:USERPROFILE\.ssh\id_ed25519.pub | ssh ubuntu-sec@<서버IP> "mkdir -p ~/.ssh && chmod 700 ~/.ssh && cat >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys"
 ```
 
-![키 생성, 등록, 키로 접속](<(6)키생성 ,키등록,키접속.png>)
+![키 생성, 등록, 키로 접속](<images/(6)키생성 ,키등록,키접속.png>)
 
 키를 등록한 뒤에는 서버 비밀번호 대신 **키 암호(passphrase)** 를 묻습니다. 키 암호는 내 PC 안에서만 쓰이고 서버로 전송되지 않습니다.
 
@@ -69,7 +69,7 @@ type $env:USERPROFILE\.ssh\id_ed25519.pub | ssh ubuntu-sec@<서버IP> "mkdir -p 
 
 들어오는 연결은 기본 차단하고 SSH(22번)만 허용했습니다. **22번 허용을 먼저, 방화벽 활성화는 나중에** 해야 현재 접속이 끊기지 않습니다.
 
-![방화벽 적용 전](<(7)방화벽전.png>)
+![방화벽 적용 전](<images/(7)방화벽전.png>)
 
 ```bash
 sudo ufw default deny incoming
@@ -79,7 +79,7 @@ sudo ufw enable
 sudo ufw status verbose
 ```
 
-![ufw 설정](<(8)ufw 설정.png>)
+![ufw 설정](<images/(8)ufw 설정.png>)
 
 ## 5. fail2ban
 
@@ -102,7 +102,7 @@ sudo systemctl enable --now fail2ban
 sudo fail2ban-client status sshd
 ```
 
-![fail2ban 설정 직후 상태](<(10)fail2ban설정.png>)
+![fail2ban 설정 직후 상태](<images/(10)fail2ban설정.png>)
 
 ### 차단 테스트
 
@@ -112,15 +112,15 @@ sudo fail2ban-client status sshd
 ssh -o PubkeyAuthentication=no ubuntu-sec@<서버IP>
 ```
 
-![로그인 실패](<(11)로그인실패.png>)
+![로그인 실패](<images/(11)로그인실패.png>)
 
 잠시 뒤 같은 접속이 `timed out`으로 막혔습니다.
 
-![접속 차단됨](<(12)차단됨.png>)
+![접속 차단됨](<images/(12)차단됨.png>)
 
 서버에서 차단 이력을 확인했습니다.
 
-![차단 이력 요약](<(13)차단목록.png>)
+![차단 이력 요약](<images/(13)차단목록.png>)
 
 로그(`/var/log/fail2ban.log`)를 시간순으로 읽으면 다음과 같습니다.
 
@@ -128,7 +128,7 @@ ssh -o PubkeyAuthentication=no ubuntu-sec@<서버IP>
 sudo grep -E "Found|Ban|Unban" /var/log/fail2ban.log
 ```
 
-![fail2ban 로그](<(13-2)차단흔적.png>)
+![fail2ban 로그](<images/(13-2)차단흔적.png>)
 
 | 시각 | 내용 |
 |---|---|
@@ -152,7 +152,7 @@ sudo systemctl restart fail2ban
 sudo fail2ban-client get sshd maxretry
 ```
 
-![설정 미적용 상태와 재시작 후 적용된 설정](<(13-3 설정 미적용 재시작 이후 적용).png>)
+![설정 미적용 상태와 재시작 후 적용된 설정](<images/(13-3 설정 미적용 재시작 이후 적용).png>)
 
 **배운 점**: 설정 파일을 고치는 것과 서비스에 적용되는 것은 별개이고, 적용 여부는 `fail2ban-client get`으로 직접 확인해야 합니다.
 
@@ -175,11 +175,11 @@ sudo systemctl restart ssh
 
 적용 전:
 
-![하드닝 전](<(14)하드닝전.png>)
+![하드닝 전](<images/(14)하드닝전.png>)
 
 설정 후 적용값 확인:
 
-![하드닝 설정](<(15)하드닝설정.png>)
+![하드닝 설정](<images/(15)하드닝설정.png>)
 
 ### 검증
 
@@ -194,7 +194,7 @@ ssh -o PubkeyAuthentication=no ubuntu-sec@<서버IP>
 
 거부 메시지가 `(publickey,password)`에서 `(publickey)`로 바뀐 것을 확인했습니다. 비밀번호 방식이 더 이상 허용되지 않는다는 뜻입니다.
 
-![비밀번호 로그인 거부](<(16)비밀번호 거부.png>)
+![비밀번호 로그인 거부](<images/(16)비밀번호 거부.png>)
 
 ## 막혔던 점과 해결
 
