@@ -32,7 +32,7 @@ ss -tulnp
 sudo ufw status
 ```
 
-![적용 전 상태](images/01_초기상태.png)
+![적용 전 상태](images/(1)ip-a.png)
 
 ## 2. SSH 서버 설치와 접속
 
