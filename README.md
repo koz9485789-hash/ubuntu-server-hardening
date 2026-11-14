@@ -12,7 +12,7 @@ VirtualBox 가상 서버(Ubuntu 24.04 LTS)에 **SSH 키 인증, 방화벽(ufw), 
 
 | 항목 | 내용 |
 |---|---|
-| 가상화 | VirtualBox (버전: ) |
+| 가상화 | VirtualBox (버전:7.2.22 ) |
 | OS | Ubuntu 24.04.5 LTS (Ubuntu Desktop 22.04.4 ISO로 설치하는 중 24.04로 업그레이드) |
 | VM 사양 | 메모리 4096MB, CPU 2개, 디스크 25GB |
 | 접속 | 윈도우 PowerShell에서 SSH |
