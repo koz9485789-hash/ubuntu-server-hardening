@@ -2,6 +2,12 @@
 
 VirtualBox 가상 서버(Ubuntu 24.04 LTS)에 **SSH 키 인증, 방화벽(ufw), 침입 차단(fail2ban), SSH 하드닝**을 직접 적용하고, 각 설정이 실제로 동작하는지 확인한 기록입니다.
 
+## 결과 요약
+
+- SSH 키 인증, ufw, fail2ban, SSH 하드닝을 적용하고 각각 동작을 확인했다.
+- fail2ban에서 로그인 실패 감지, 차단, 10분 뒤 해제가 일어나는 것을 로그로 확인했다.
+- 설정을 바꾼 뒤 서비스를 재시작하지 않으면 적용되지 않는 문제를 직접 겪고 해결했다.
+
 ## 목표
 
 - 서버를 처음 열었을 때의 상태를 확인하고, 접속 경로를 단계적으로 좁혀 간다.
@@ -12,8 +18,8 @@ VirtualBox 가상 서버(Ubuntu 24.04 LTS)에 **SSH 키 인증, 방화벽(ufw), 
 
 | 항목 | 내용 |
 |---|---|
-| 가상화 | VirtualBox (버전:7.2.22 ) |
-| OS | Ubuntu 24.04.5 LTS (Ubuntu Desktop 22.04.4 ISO로 설치하는 중 24.04로 업그레이드) |
+| 가상화 | VirtualBox 7.2.22 |
+| OS | Ubuntu 24.04 LTS (설치 직후 24.04.1, 업데이트 후 24.04.5로 표시. Ubuntu Desktop 22.04.4 ISO로 설치하는 중 24.04로 업그레이드) |
 | VM 사양 | 메모리 4096MB, CPU 2개, 디스크 25GB |
 | 접속 | 윈도우 PowerShell에서 SSH |
 | 네트워크 | 처음에는 브리지 어댑터, 이후 카페 네트워크에서 작업하며 NAT + 포트 포워딩으로 변경 |
@@ -29,6 +35,10 @@ cat /etc/os-release
 ip a
 ss -tulnp
 ```
+
+![OS 버전 확인 (설치 직후)](<images/(5)초기설정.png>)
+
+처음에는 경로 앞의 `/`를 빠뜨려(`cat etc/os-release`) `No such file or directory` 오류가 났고, `/`부터 시작하는 절대 경로로 입력하자 정상 출력됐습니다. 설치 직후 버전은 Ubuntu 24.04.1 LTS였습니다.
 
 ![OS 버전과 네트워크 주소](<images/(1)ip-a.png>)
 
@@ -50,7 +60,6 @@ sudo systemctl status ssh
 
 ![비밀번호로 SSH 접속](<images/(4)ssh-접속.png>)
 
-![초기 설정](<images/(5)초기설정.png>)
 
 ## 3. SSH 키 인증
 
@@ -68,8 +77,6 @@ type $env:USERPROFILE\.ssh\id_ed25519.pub | ssh ubuntu-sec@<서버IP> "mkdir -p 
 ## 4. 방화벽(ufw)
 
 들어오는 연결은 기본 차단하고 SSH(22번)만 허용했습니다. **22번 허용을 먼저, 방화벽 활성화는 나중에** 해야 현재 접속이 끊기지 않습니다.
-
-![방화벽 적용 전](<images/(7)방화벽전.png>)
 
 ```bash
 sudo ufw default deny incoming
@@ -189,10 +196,10 @@ sudo systemctl restart ssh
 - 비밀번호 로그인을 시도하면 비밀번호를 묻지도 않고 거부된다.
 
 ```powershell
-ssh -o PubkeyAuthentication=no ubuntu-sec@<서버IP>
+ssh -p 2222 -o PubkeyAuthentication=no ubuntu-sec@127.0.0.1
 ```
 
-거부 메시지가 `(publickey,password)`에서 `(publickey)`로 바뀐 것을 확인했습니다. 비밀번호 방식이 더 이상 허용되지 않는다는 뜻입니다.
+이 단계는 NAT 환경이라 `127.0.0.1`의 2222번 포트로 접속했습니다. 거부 메시지가 `(publickey,password)`에서 `(publickey)`로 바뀐 것을 확인했습니다. 비밀번호 방식이 더 이상 허용되지 않는다는 뜻입니다.
 
 ![비밀번호 로그인 거부](<images/(16)비밀번호 거부.png>)
 
@@ -201,7 +208,8 @@ ssh -o PubkeyAuthentication=no ubuntu-sec@<서버IP>
 | 문제 | 원인 | 해결 |
 |---|---|---|
 | `sudo`를 인식하지 못한다는 오류 | 우분투 명령을 윈도우 PowerShell에 입력함 | 프롬프트로 창을 구분 (`PS C:\...>`는 윈도우, `ubuntu-sec@...$`는 우분투) |
-| 접속이 안 됨 | `ip a`에서 `127.0.0.1`을 서버 주소로 착각 | `enp0s3` 항목의 `inet`이 접속용 주소 |
+| 접속이 안 됨 | `ip a`에서 `127.0.0.1`을 서버 주소로 착각 (브리지 환경 기준) | `enp0s3` 항목의 `inet`이 접속용 주소. NAT에서는 `127.0.0.1:2222`가 맞는 주소 |
+| `cat etc/os-release`가 실패함 | 경로 맨 앞의 `/` 누락 | `/etc/os-release`처럼 `/`로 시작하는 절대 경로 사용 |
 | 장소를 옮긴 뒤 VM이 주소를 받지 못함 | 브리지 방식은 PC가 연결된 네트워크에 의존 | NAT + 포트 포워딩으로 변경 |
 | fail2ban 로그가 `journalctl`에 없음 | 차단 기록은 `/var/log/fail2ban.log`에 저장됨 | `fail2ban-client get logtarget`으로 로그 위치 확인 |
 | `maxretry` 설정이 적용되지 않음 | 설정 변경 후 서비스를 재시작하지 않음 | 재시작 후 `get` 명령으로 적용값 확인 |
